@@ -14,16 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      opd: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          personnel_count: number
+          tree_target_per_person: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          personnel_count?: number
+          tree_target_per_person?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          personnel_count?: number
+          tree_target_per_person?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tree_registrations: {
+        Row: {
+          address: string
+          created_at: string
+          email: string
+          full_name: string
+          gender: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          opd_id: string | null
+          photo_url: string | null
+          tree_category: string
+          tree_count: number
+          tree_type: string
+          whatsapp: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          email: string
+          full_name: string
+          gender: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          opd_id?: string | null
+          photo_url?: string | null
+          tree_category: string
+          tree_count?: number
+          tree_type: string
+          whatsapp: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          gender?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          opd_id?: string | null
+          photo_url?: string | null
+          tree_category?: string
+          tree_count?: number
+          tree_type?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tree_registrations_opd_id_fkey"
+            columns: ["opd_id"]
+            isOneToOne: false
+            referencedRelation: "opd"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +283,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

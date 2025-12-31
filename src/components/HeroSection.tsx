@@ -1,5 +1,7 @@
-import { TreePine, Leaf, TreeDeciduous } from "lucide-react";
+import { TreePine, Leaf, TreeDeciduous, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
+import { Button } from "@/components/ui/button";
 
 const HeroSection = () => {
   return (
@@ -35,6 +37,16 @@ const HeroSection = () => {
       </div>
 
       <div className="container relative z-10 py-16 md:py-24">
+        {/* Admin Login Button */}
+        <div className="absolute top-4 right-4 md:top-8 md:right-8">
+          <Link to="/auth">
+            <Button variant="outline" size="sm" className="bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/20">
+              <LogIn className="w-4 h-4 mr-2" />
+              Login Admin
+            </Button>
+          </Link>
+        </div>
+
         <div className="max-w-4xl mx-auto text-center animate-fade-up">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground text-sm font-medium mb-6">
             <TreePine className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   User, 
   Mail, 
@@ -25,18 +26,25 @@ interface FormData {
   jenisKelamin: string;
   alamat: string;
   noWhatsapp: string;
-  opd: string;
+  opdId: string;
   jumlahPohon: string;
   jenisPohon: string;
   kategoriPohon: string;
-  lokasiMaps: string;
+  latitude: string;
+  longitude: string;
   photo: File | null;
+}
+
+interface OPD {
+  id: string;
+  name: string;
 }
 
 const TreeForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [opdList, setOpdList] = useState<OPD[]>([]);
   
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -44,13 +52,29 @@ const TreeForm = () => {
     jenisKelamin: "",
     alamat: "",
     noWhatsapp: "",
-    opd: "",
+    opdId: "",
     jumlahPohon: "",
     jenisPohon: "",
     kategoriPohon: "",
-    lokasiMaps: "",
+    latitude: "",
+    longitude: "",
     photo: null,
   });
+
+  useEffect(() => {
+    fetchOPDList();
+  }, []);
+
+  const fetchOPDList = async () => {
+    const { data, error } = await supabase
+      .from('opd')
+      .select('id, name')
+      .order('name');
+    
+    if (!error && data) {
+      setOpdList(data);
+    }
+  };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,21 +100,68 @@ const TreeForm = () => {
     }
   };
 
+  const parseCoordinates = (input: string) => {
+    // Try to parse Google Maps URL or direct coordinates
+    const coordMatch = input.match(/-?\d+\.?\d*,\s*-?\d+\.?\d*/);
+    if (coordMatch) {
+      const [lat, lng] = coordMatch[0].split(',').map(s => parseFloat(s.trim()));
+      return { lat, lng };
+    }
+    
+    // Try to extract from Google Maps URL
+    const urlMatch = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (urlMatch) {
+      return { lat: parseFloat(urlMatch[1]), lng: parseFloat(urlMatch[2]) };
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     // Validate required fields
     if (!formData.email || !formData.namaLengkap || !formData.jenisKelamin || 
-        !formData.alamat || !formData.noWhatsapp || !formData.opd || 
+        !formData.alamat || !formData.noWhatsapp || !formData.opdId || 
         !formData.jumlahPohon || !formData.jenisPohon || !formData.kategoriPohon) {
       toast.error("Mohon lengkapi semua field yang wajib diisi");
       setIsSubmitting(false);
       return;
     }
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Parse coordinates if provided
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    
+    if (formData.latitude && formData.longitude) {
+      latitude = parseFloat(formData.latitude);
+      longitude = parseFloat(formData.longitude);
+    }
+
+    // Insert to database
+    const { error } = await supabase
+      .from('tree_registrations')
+      .insert({
+        email: formData.email,
+        full_name: formData.namaLengkap,
+        gender: formData.jenisKelamin,
+        address: formData.alamat,
+        whatsapp: formData.noWhatsapp,
+        opd_id: formData.opdId,
+        tree_count: parseInt(formData.jumlahPohon),
+        tree_type: formData.jenisPohon,
+        tree_category: formData.kategoriPohon,
+        latitude,
+        longitude,
+      });
+
+    if (error) {
+      console.error('Error submitting:', error);
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
+      setIsSubmitting(false);
+      return;
+    }
     
     toast.success("Data pohon berhasil disimpan!", {
       description: "Terima kasih atas kontribusi Anda untuk penghijauan.",
@@ -103,27 +174,17 @@ const TreeForm = () => {
       jenisKelamin: "",
       alamat: "",
       noWhatsapp: "",
-      opd: "",
+      opdId: "",
       jumlahPohon: "",
       jenisPohon: "",
       kategoriPohon: "",
-      lokasiMaps: "",
+      latitude: "",
+      longitude: "",
       photo: null,
     });
     setPhotoPreview(null);
     setIsSubmitting(false);
   };
-
-  const opdOptions = [
-    "Dinas Lingkungan Hidup",
-    "Dinas Pertanian",
-    "Dinas Kehutanan",
-    "Dinas Pekerjaan Umum",
-    "Badan Perencanaan Pembangunan Daerah",
-    "Kecamatan",
-    "Kelurahan/Desa",
-    "Lainnya",
-  ];
 
   const jenisPohonBuah = [
     "Mangga", "Rambutan", "Durian", "Jeruk", "Jambu", 
@@ -241,14 +302,14 @@ const TreeForm = () => {
                 <Building2 className="w-4 h-4 text-muted-foreground" />
                 OPD (Organisasi Perangkat Daerah) <span className="text-destructive">*</span>
               </Label>
-              <Select value={formData.opd} onValueChange={(value) => handleInputChange("opd", value)}>
+              <Select value={formData.opdId} onValueChange={(value) => handleInputChange("opdId", value)}>
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Pilih OPD" />
                 </SelectTrigger>
                 <SelectContent>
-                  {opdOptions.map((opd) => (
-                    <SelectItem key={opd} value={opd.toLowerCase().replace(/\s+/g, '-')}>
-                      {opd}
+                  {opdList.map((opd) => (
+                    <SelectItem key={opd.id} value={opd.id}>
+                      {opd.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -331,31 +392,39 @@ const TreeForm = () => {
               Lokasi Penanaman
             </h3>
 
-            <div className="space-y-2">
-              <Label htmlFor="lokasiMaps" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                Link Google Maps / Koordinat
-              </Label>
-              <Input
-                id="lokasiMaps"
-                type="text"
-                placeholder="https://maps.google.com/... atau -6.xxxxx, 106.xxxxx"
-                value={formData.lokasiMaps}
-                onChange={(e) => handleInputChange("lokasiMaps", e.target.value)}
-                className="h-12 transition-all focus:shadow-soft"
-              />
-              <p className="text-sm text-muted-foreground">
-                Salin link dari Google Maps atau masukkan koordinat lokasi penanaman
-              </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="latitude" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  Latitude
+                </Label>
+                <Input
+                  id="latitude"
+                  type="text"
+                  placeholder="-6.xxxxx"
+                  value={formData.latitude}
+                  onChange={(e) => handleInputChange("latitude", e.target.value)}
+                  className="h-12 transition-all focus:shadow-soft"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  Longitude
+                </Label>
+                <Input
+                  id="longitude"
+                  type="text"
+                  placeholder="106.xxxxx"
+                  value={formData.longitude}
+                  onChange={(e) => handleInputChange("longitude", e.target.value)}
+                  className="h-12 transition-all focus:shadow-soft"
+                />
+              </div>
             </div>
-
-            {/* Map Preview Placeholder */}
-            <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-8 text-center">
-              <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                Pratinjau peta akan muncul di sini setelah lokasi dimasukkan
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Masukkan koordinat lokasi penanaman (opsional)
+            </p>
           </div>
 
           {/* Photo Upload Section */}
