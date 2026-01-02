@@ -17,7 +17,8 @@ import {
   Camera,
   Send,
   Upload,
-  X
+  X,
+  ExternalLink
 } from "lucide-react";
 
 interface FormData {
@@ -115,6 +116,49 @@ const TreeForm = () => {
     }
     
     return null;
+  };
+
+  const openInGoogleMaps = () => {
+    const lat = formData.latitude.trim();
+    const lng = formData.longitude.trim();
+    
+    // Validate empty data
+    if (!lat || !lng) {
+      toast.error("Koordinat belum diisi", {
+        description: "Masukkan latitude dan longitude terlebih dahulu."
+      });
+      return;
+    }
+    
+    // Validate numeric format
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      toast.error("Format koordinat tidak valid", {
+        description: "Pastikan latitude dan longitude berupa angka yang valid."
+      });
+      return;
+    }
+    
+    // Validate coordinate ranges
+    if (latNum < -90 || latNum > 90) {
+      toast.error("Latitude tidak valid", {
+        description: "Latitude harus berada di antara -90 dan 90."
+      });
+      return;
+    }
+    
+    if (lngNum < -180 || lngNum > 180) {
+      toast.error("Longitude tidak valid", {
+        description: "Longitude harus berada di antara -180 dan 180."
+      });
+      return;
+    }
+    
+    // Open Google Maps in new tab
+    const url = `https://www.google.com/maps?q=${encodeURIComponent(latNum)},${encodeURIComponent(lngNum)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -404,7 +448,9 @@ const TreeForm = () => {
                   placeholder="-6.xxxxx"
                   value={formData.latitude}
                   onChange={(e) => handleInputChange("latitude", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
+                  onClick={formData.latitude && formData.longitude ? openInGoogleMaps : undefined}
+                  className={`h-12 transition-all focus:shadow-soft ${formData.latitude && formData.longitude ? 'cursor-pointer hover:bg-primary/5' : ''}`}
+                  title={formData.latitude && formData.longitude ? "Klik untuk lihat di Google Maps" : undefined}
                 />
               </div>
               <div className="space-y-2">
@@ -418,13 +464,28 @@ const TreeForm = () => {
                   placeholder="106.xxxxx"
                   value={formData.longitude}
                   onChange={(e) => handleInputChange("longitude", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
+                  onClick={formData.latitude && formData.longitude ? openInGoogleMaps : undefined}
+                  className={`h-12 transition-all focus:shadow-soft ${formData.latitude && formData.longitude ? 'cursor-pointer hover:bg-primary/5' : ''}`}
+                  title={formData.latitude && formData.longitude ? "Klik untuk lihat di Google Maps" : undefined}
                 />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Masukkan koordinat lokasi penanaman (opsional)
-            </p>
+            
+            <div className="flex items-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openInGoogleMaps}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Lihat di Google Maps
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Masukkan koordinat lokasi penanaman (opsional)
+              </p>
+            </div>
           </div>
 
           {/* Photo Upload Section */}
