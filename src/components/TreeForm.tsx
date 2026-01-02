@@ -18,7 +18,9 @@ import {
   Send,
   Upload,
   X,
-  ExternalLink
+  ExternalLink,
+  Locate,
+  Loader2
 } from "lucide-react";
 
 interface FormData {
@@ -45,6 +47,7 @@ const TreeForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [opdList, setOpdList] = useState<OPD[]>([]);
   
   const [formData, setFormData] = useState<FormData>({
@@ -159,6 +162,55 @@ const TreeForm = () => {
     // Open Google Maps in new tab
     const url = `https://www.google.com/maps?q=${encodeURIComponent(latNum)},${encodeURIComponent(lngNum)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const getCurrentLocation = () => {
+    // Check if Geolocation API is supported
+    if (!navigator.geolocation) {
+      toast.error("GPS tidak didukung", {
+        description: "Browser Anda tidak mendukung fitur geolokasi."
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        handleInputChange("latitude", latitude.toFixed(6));
+        handleInputChange("longitude", longitude.toFixed(6));
+        setIsGettingLocation(false);
+        toast.success("Lokasi berhasil didapatkan!", {
+          description: `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`
+        });
+      },
+      (error) => {
+        setIsGettingLocation(false);
+        let errorMessage = "Gagal mendapatkan lokasi.";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Akses lokasi ditolak. Mohon izinkan akses lokasi di browser Anda.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Informasi lokasi tidak tersedia.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Waktu permintaan lokasi habis. Silakan coba lagi.";
+            break;
+        }
+        
+        toast.error("Gagal mendapatkan lokasi", {
+          description: errorMessage
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -471,7 +523,22 @@ const TreeForm = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={getCurrentLocation}
+                disabled={isGettingLocation}
+                className="flex items-center gap-2"
+              >
+                {isGettingLocation ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Locate className="w-4 h-4" />
+                )}
+                {isGettingLocation ? "Mengambil Lokasi..." : "Gunakan Lokasi Saya"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -482,10 +549,10 @@ const TreeForm = () => {
                 <ExternalLink className="w-4 h-4" />
                 Lihat di Google Maps
               </Button>
-              <p className="text-sm text-muted-foreground">
-                Masukkan koordinat lokasi penanaman (opsional)
-              </p>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Klik "Gunakan Lokasi Saya" untuk mengambil koordinat GPS otomatis, atau masukkan koordinat secara manual (opsional)
+            </p>
           </div>
 
           {/* Photo Upload Section */}
