@@ -1,7 +1,13 @@
-import { TreePine, Leaf, TreeDeciduous, LogIn } from "lucide-react";
+import { TreePine, Leaf, TreeDeciduous, LogIn, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import TreeForm from "@/components/TreeForm";
 
 const HeroSection = () => {
   return (
@@ -58,10 +64,27 @@ const HeroSection = () => {
             <span className="block text-primary-foreground/90">Pohon</span>
           </h1>
           
-          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed mb-8">
             Sistem pendataan pohon untuk mendukung program penghijauan dan 
             pelestarian lingkungan. Mari bersama menjaga bumi untuk generasi mendatang.
           </p>
+
+          {/* CTA Button */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              >
+                <ClipboardList className="w-5 h-5 mr-2" />
+                Form Pendataan Pohon
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+              <TreeForm />
+            </DialogContent>
+          </Dialog>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-12 max-w-2xl mx-auto">
