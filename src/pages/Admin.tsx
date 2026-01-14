@@ -15,11 +15,13 @@ import {
   Settings,
   TrendingUp,
   Target,
-  BarChart3
+  BarChart3,
+  Sliders
 } from "lucide-react";
 import OPDSettings from "@/components/admin/OPDSettings";
 import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
 import DashboardStats from "@/components/admin/DashboardStats";
+import GlobalSettings from "@/components/admin/GlobalSettings";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -99,10 +101,16 @@ const Admin = () => {
                 <span className="hidden sm:inline">Data Pohon</span>
               </TabsTrigger>
               {isAdmin && (
-                <TabsTrigger value="settings" className="flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  <span className="hidden sm:inline">Pengaturan OPD</span>
-                </TabsTrigger>
+                <>
+                  <TabsTrigger value="global-settings" className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4" />
+                    <span className="hidden sm:inline">Pengaturan Tampilan</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline">Pengaturan OPD</span>
+                  </TabsTrigger>
+                </>
               )}
             </TabsList>
 
@@ -115,9 +123,14 @@ const Admin = () => {
             </TabsContent>
 
             {isAdmin && (
-              <TabsContent value="settings">
-                <OPDSettings />
-              </TabsContent>
+              <>
+                <TabsContent value="global-settings">
+                  <GlobalSettings />
+                </TabsContent>
+                <TabsContent value="settings">
+                  <OPDSettings />
+                </TabsContent>
+              </>
             )}
           </Tabs>
         </main>

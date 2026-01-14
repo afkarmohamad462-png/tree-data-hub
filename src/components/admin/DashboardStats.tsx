@@ -16,6 +16,12 @@ interface OPDStats {
   completion_percentage: number;
 }
 
+interface GlobalSettings {
+  display_total_target: number;
+  display_total_participants: number;
+  display_total_trees: number;
+}
+
 const DashboardStats = () => {
   const [stats, setStats] = useState<OPDStats[]>([]);
   const [totalStats, setTotalStats] = useState({
@@ -24,11 +30,37 @@ const DashboardStats = () => {
     totalPersonnel: 0,
     totalTarget: 0,
   });
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({
+    display_total_target: 0,
+    display_total_participants: 0,
+    display_total_trees: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchGlobalSettings();
   }, []);
+
+  const fetchGlobalSettings = async () => {
+    const { data, error } = await (supabase
+      .from('global_settings' as any)
+      .select('key, value') as any);
+    
+    if (!error && data) {
+      const settingsObj: GlobalSettings = {
+        display_total_target: 0,
+        display_total_participants: 0,
+        display_total_trees: 0,
+      };
+      (data as { key: string; value: number }[]).forEach((item: { key: string; value: number }) => {
+        if (item.key in settingsObj) {
+          settingsObj[item.key as keyof GlobalSettings] = item.value;
+        }
+      });
+      setGlobalSettings(settingsObj);
+    }
+  };
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -110,6 +142,20 @@ const DashboardStats = () => {
     );
   }
 
+  // Use global settings if set, otherwise use calculated values
+  const displayTrees = globalSettings.display_total_trees > 0 
+    ? globalSettings.display_total_trees 
+    : totalStats.totalTrees;
+  const displayParticipants = globalSettings.display_total_participants > 0 
+    ? globalSettings.display_total_participants 
+    : totalStats.totalParticipants;
+  const displayTarget = globalSettings.display_total_target > 0 
+    ? globalSettings.display_total_target 
+    : totalStats.totalTarget;
+  const displayPercentage = displayTarget > 0 
+    ? Math.round((displayTrees / displayTarget) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -122,7 +168,10 @@ const DashboardStats = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Pohon</p>
-                <p className="text-2xl font-bold text-foreground">{totalStats.totalTrees.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-foreground">{displayTrees.toLocaleString()}</p>
+                {globalSettings.display_total_trees > 0 && (
+                  <p className="text-xs text-muted-foreground">(Aktual: {totalStats.totalTrees.toLocaleString()})</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -136,7 +185,10 @@ const DashboardStats = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Partisipan</p>
-                <p className="text-2xl font-bold text-foreground">{totalStats.totalParticipants.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-foreground">{displayParticipants.toLocaleString()}</p>
+                {globalSettings.display_total_participants > 0 && (
+                  <p className="text-xs text-muted-foreground">(Aktual: {totalStats.totalParticipants.toLocaleString()})</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -150,7 +202,10 @@ const DashboardStats = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Target Total</p>
-                <p className="text-2xl font-bold text-foreground">{totalStats.totalTarget.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-foreground">{displayTarget.toLocaleString()}</p>
+                {globalSettings.display_total_target > 0 && (
+                  <p className="text-xs text-muted-foreground">(Aktual: {totalStats.totalTarget.toLocaleString()})</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -164,11 +219,7 @@ const DashboardStats = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Pencapaian</p>
-                <p className="text-2xl font-bold text-foreground">
-                  {totalStats.totalTarget > 0 
-                    ? Math.round((totalStats.totalTrees / totalStats.totalTarget) * 100)
-                    : 0}%
-                </p>
+                <p className="text-2xl font-bold text-foreground">{displayPercentage}%</p>
               </div>
             </div>
           </CardContent>
