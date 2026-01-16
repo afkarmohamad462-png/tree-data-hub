@@ -2,22 +2,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   TreePine, 
-  Users, 
-  Building2, 
   LogOut, 
   Loader2, 
-  Settings,
-  TrendingUp,
-  Target,
-  BarChart3,
-  Sliders
+  Menu
 } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 import OPDSettings from "@/components/admin/OPDSettings";
 import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
 import DashboardStats from "@/components/admin/DashboardStats";
@@ -26,6 +20,8 @@ import GlobalSettings from "@/components/admin/GlobalSettings";
 const Admin = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isLoading, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -50,6 +46,21 @@ const Admin = () => {
     return null;
   }
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <DashboardStats />;
+      case "registrations":
+        return <TreeRegistrationsList />;
+      case "global-settings":
+        return isAdmin ? <GlobalSettings /> : null;
+      case "settings":
+        return isAdmin ? <OPDSettings /> : null;
+      default:
+        return <DashboardStats />;
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -57,84 +68,57 @@ const Admin = () => {
         <meta name="description" content="Dashboard admin untuk mengelola data pohon" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-nature">
-        {/* Header */}
-        <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-          <div className="container py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <TreePine className="w-6 h-6 text-primary" />
+      <SidebarProvider defaultOpen={!isMobile}>
+        <div className="min-h-screen flex w-full bg-gradient-nature">
+          {/* Sidebar */}
+          <AdminSidebar 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+            isAdmin={isAdmin} 
+          />
+
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Header */}
+            <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+              <div className="px-4 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger className="md:hidden">
+                    <Menu className="w-5 h-5" />
+                  </SidebarTrigger>
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <TreePine className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-lg text-foreground">Bank Data Pohon</h1>
+                    <p className="text-sm text-muted-foreground hidden sm:block">Dashboard Admin</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground hidden sm:block">
+                    {user.email}
+                  </span>
+                  {isAdmin && (
+                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full hidden sm:inline">
+                      Admin
+                    </span>
+                  )}
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Keluar</span>
+                  </Button>
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold text-lg text-foreground">Bank Data Pohon</h1>
-                <p className="text-sm text-muted-foreground">Dashboard Admin</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {user.email}
-              </span>
-              {isAdmin && (
-                <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                  Admin
-                </span>
-              )}
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Keluar
-              </Button>
-            </div>
+            </header>
+
+            {/* Content */}
+            <main className="flex-1 p-4 md:p-8 overflow-auto">
+              {renderContent()}
+            </main>
           </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="container py-8">
-          <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="bg-card/80 backdrop-blur-sm p-1">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="registrations" className="flex items-center gap-2">
-                <TreePine className="w-4 h-4" />
-                <span className="hidden sm:inline">Data Pohon</span>
-              </TabsTrigger>
-              {isAdmin && (
-                <>
-                  <TabsTrigger value="global-settings" className="flex items-center gap-2">
-                    <Sliders className="w-4 h-4" />
-                    <span className="hidden sm:inline">Pengaturan Tampilan</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline">Pengaturan OPD</span>
-                  </TabsTrigger>
-                </>
-              )}
-            </TabsList>
-
-            <TabsContent value="dashboard">
-              <DashboardStats />
-            </TabsContent>
-
-            <TabsContent value="registrations">
-              <TreeRegistrationsList />
-            </TabsContent>
-
-            {isAdmin && (
-              <>
-                <TabsContent value="global-settings">
-                  <GlobalSettings />
-                </TabsContent>
-                <TabsContent value="settings">
-                  <OPDSettings />
-                </TabsContent>
-              </>
-            )}
-          </Tabs>
-        </main>
-      </div>
+        </div>
+      </SidebarProvider>
     </>
   );
 };
