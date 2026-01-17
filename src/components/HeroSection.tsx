@@ -14,9 +14,9 @@ const HeroSection = () => {
     <section className="relative min-h-[50vh] overflow-hidden flex items-center">
       {/* Background Image */}
       <div className="absolute inset-0">
-        <img 
-          src={heroForest} 
-          alt="Forest background" 
+        <img
+          src={heroForest}
+          alt="Forest background"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-hero opacity-85" />
@@ -37,7 +37,7 @@ const HeroSection = () => {
         <div className="absolute top-1/3 right-1/3 animate-float opacity-15" style={{ animationDelay: "1.5s" }}>
           <Leaf className="w-16 h-16 text-primary-foreground rotate-45" />
         </div>
-        
+
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20" />
       </div>
@@ -58,23 +58,23 @@ const HeroSection = () => {
             <TreePine className="w-4 h-4" />
             Sistem Pendataan Pohon
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary-foreground mb-6 leading-tight">
             Bank Data
             <span className="block text-primary-foreground/90">Pohon</span>
           </h1>
-          
+
           <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed mb-8">
-            Sistem pendataan pohon untuk mendukung program penghijauan dan 
+            Sistem pendataan pohon untuk mendukung program Agro Mopomulo untuk
             pelestarian lingkungan. Mari bersama menjaga bumi untuk generasi mendatang.
           </p>
 
           {/* CTA Button */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button 
-                variant="hero" 
-                size="lg" 
+              <Button
+                variant="hero"
+                size="lg"
                 className="text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 <ClipboardList className="w-5 h-5 mr-2" />
