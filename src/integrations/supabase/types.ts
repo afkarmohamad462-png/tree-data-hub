@@ -75,8 +75,10 @@ export type Database = {
           id: string
           latitude: number | null
           longitude: number | null
+          nip: string | null
           opd_id: string | null
           photo_url: string | null
+          seed_source: string | null
           tree_category: string
           tree_count: number
           tree_type: string
@@ -91,8 +93,10 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          nip?: string | null
           opd_id?: string | null
           photo_url?: string | null
+          seed_source?: string | null
           tree_category: string
           tree_count?: number
           tree_type: string
@@ -107,8 +111,10 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          nip?: string | null
           opd_id?: string | null
           photo_url?: string | null
+          seed_source?: string | null
           tree_category?: string
           tree_count?: number
           tree_type?: string

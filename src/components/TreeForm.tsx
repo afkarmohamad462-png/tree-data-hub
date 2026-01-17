@@ -14,18 +14,20 @@ import {
   MapPin, 
   TreePine, 
   Building2, 
-  Camera,
   Send,
-  Upload,
-  X,
-  ExternalLink,
   Locate,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Sprout
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface FormData {
   email: string;
   namaLengkap: string;
+  nip: string;
   jenisKelamin: string;
   alamat: string;
   noWhatsapp: string;
@@ -33,9 +35,9 @@ interface FormData {
   jumlahPohon: string;
   jenisPohon: string;
   kategoriPohon: string;
+  sumberBibit: string;
   latitude: string;
   longitude: string;
-  photo: File | null;
 }
 
 interface OPD {
@@ -43,9 +45,10 @@ interface OPD {
   name: string;
 }
 
+const TOTAL_STEPS = 4;
+
 const TreeForm = () => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [opdList, setOpdList] = useState<OPD[]>([]);
@@ -53,6 +56,7 @@ const TreeForm = () => {
   const [formData, setFormData] = useState<FormData>({
     email: "",
     namaLengkap: "",
+    nip: "",
     jenisKelamin: "",
     alamat: "",
     noWhatsapp: "",
@@ -60,9 +64,9 @@ const TreeForm = () => {
     jumlahPohon: "",
     jenisPohon: "",
     kategoriPohon: "",
+    sumberBibit: "",
     latitude: "",
     longitude: "",
-    photo: null,
   });
 
   useEffect(() => {
@@ -84,88 +88,7 @@ const TreeForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, photo: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removePhoto = () => {
-    setFormData(prev => ({ ...prev, photo: null }));
-    setPhotoPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const parseCoordinates = (input: string) => {
-    // Try to parse Google Maps URL or direct coordinates
-    const coordMatch = input.match(/-?\d+\.?\d*,\s*-?\d+\.?\d*/);
-    if (coordMatch) {
-      const [lat, lng] = coordMatch[0].split(',').map(s => parseFloat(s.trim()));
-      return { lat, lng };
-    }
-    
-    // Try to extract from Google Maps URL
-    const urlMatch = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-    if (urlMatch) {
-      return { lat: parseFloat(urlMatch[1]), lng: parseFloat(urlMatch[2]) };
-    }
-    
-    return null;
-  };
-
-  const openInGoogleMaps = () => {
-    const lat = formData.latitude.trim();
-    const lng = formData.longitude.trim();
-    
-    // Validate empty data
-    if (!lat || !lng) {
-      toast.error("Koordinat belum diisi", {
-        description: "Masukkan latitude dan longitude terlebih dahulu."
-      });
-      return;
-    }
-    
-    // Validate numeric format
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    
-    if (isNaN(latNum) || isNaN(lngNum)) {
-      toast.error("Format koordinat tidak valid", {
-        description: "Pastikan latitude dan longitude berupa angka yang valid."
-      });
-      return;
-    }
-    
-    // Validate coordinate ranges
-    if (latNum < -90 || latNum > 90) {
-      toast.error("Latitude tidak valid", {
-        description: "Latitude harus berada di antara -90 dan 90."
-      });
-      return;
-    }
-    
-    if (lngNum < -180 || lngNum > 180) {
-      toast.error("Longitude tidak valid", {
-        description: "Longitude harus berada di antara -180 dan 180."
-      });
-      return;
-    }
-    
-    // Open Google Maps in new tab
-    const url = `https://www.google.com/maps?q=${encodeURIComponent(latNum)},${encodeURIComponent(lngNum)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
   const getCurrentLocation = () => {
-    // Check if Geolocation API is supported
     if (!navigator.geolocation) {
       toast.error("GPS tidak didukung", {
         description: "Browser Anda tidak mendukung fitur geolokasi."
@@ -213,18 +136,59 @@ const TreeForm = () => {
     );
   };
 
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        if (!formData.email || !formData.namaLengkap || !formData.nip) {
+          toast.error("Mohon lengkapi semua field yang wajib diisi");
+          return false;
+        }
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+          toast.error("Format email tidak valid");
+          return false;
+        }
+        return true;
+      case 2:
+        if (!formData.jenisKelamin || !formData.noWhatsapp || !formData.alamat) {
+          toast.error("Mohon lengkapi semua field yang wajib diisi");
+          return false;
+        }
+        return true;
+      case 3:
+        if (!formData.opdId || !formData.jumlahPohon || !formData.kategoriPohon || !formData.jenisPohon) {
+          toast.error("Mohon lengkapi semua field yang wajib diisi");
+          return false;
+        }
+        return true;
+      case 4:
+        if (!formData.sumberBibit) {
+          toast.error("Mohon pilih sumber bibit");
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateStep(currentStep)) return;
+    
     setIsSubmitting(true);
-
-    // Validate required fields
-    if (!formData.email || !formData.namaLengkap || !formData.jenisKelamin || 
-        !formData.alamat || !formData.noWhatsapp || !formData.opdId || 
-        !formData.jumlahPohon || !formData.jenisPohon || !formData.kategoriPohon) {
-      toast.error("Mohon lengkapi semua field yang wajib diisi");
-      setIsSubmitting(false);
-      return;
-    }
 
     // Parse coordinates if provided
     let latitude: number | null = null;
@@ -239,15 +203,17 @@ const TreeForm = () => {
     const { error } = await supabase
       .from('tree_registrations')
       .insert({
-        email: formData.email,
-        full_name: formData.namaLengkap,
+        email: formData.email.trim(),
+        full_name: formData.namaLengkap.trim(),
+        nip: formData.nip.trim(),
         gender: formData.jenisKelamin,
-        address: formData.alamat,
-        whatsapp: formData.noWhatsapp,
+        address: formData.alamat.trim(),
+        whatsapp: formData.noWhatsapp.trim(),
         opd_id: formData.opdId,
         tree_count: parseInt(formData.jumlahPohon),
         tree_type: formData.jenisPohon,
         tree_category: formData.kategoriPohon,
+        seed_source: formData.sumberBibit,
         latitude,
         longitude,
       });
@@ -267,6 +233,7 @@ const TreeForm = () => {
     setFormData({
       email: "",
       namaLengkap: "",
+      nip: "",
       jenisKelamin: "",
       alamat: "",
       noWhatsapp: "",
@@ -274,11 +241,11 @@ const TreeForm = () => {
       jumlahPohon: "",
       jenisPohon: "",
       kategoriPohon: "",
+      sumberBibit: "",
       latitude: "",
       longitude: "",
-      photo: null,
     });
-    setPhotoPreview(null);
+    setCurrentStep(1);
     setIsSubmitting(false);
   };
 
@@ -292,6 +259,23 @@ const TreeForm = () => {
     "Sonokeling", "Trembesi", "Pinus", "Eucalyptus", "Lainnya"
   ];
 
+  const sumberBibitOptions = [
+    "Pembibitan Sendiri",
+    "Bantuan Pemerintah",
+    "Pembelian dari Penangkar",
+    "Sumbangan/Donasi",
+    "Lainnya"
+  ];
+
+  const stepTitles = [
+    "Data Diri",
+    "Kontak & Alamat",
+    "Data OPD & Pohon",
+    "Sumber & Lokasi"
+  ];
+
+  const progressValue = (currentStep / TOTAL_STEPS) * 100;
+
   return (
     <Card className="shadow-elevated border-0 overflow-hidden">
       <CardHeader className="bg-gradient-hero text-primary-foreground p-8">
@@ -302,325 +286,367 @@ const TreeForm = () => {
           <div>
             <CardTitle className="text-2xl font-bold">Form Pendataan Pohon</CardTitle>
             <CardDescription className="text-primary-foreground/80 mt-1">
-              Isi data dengan lengkap dan benar
+              Langkah {currentStep} dari {TOTAL_STEPS}: {stepTitles[currentStep - 1]}
             </CardDescription>
+          </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-6">
+          <Progress value={progressValue} className="h-2 bg-primary-foreground/20" />
+          <div className="flex justify-between mt-3">
+            {stepTitles.map((title, index) => (
+              <div 
+                key={index}
+                className={`flex flex-col items-center ${index + 1 <= currentStep ? 'text-primary-foreground' : 'text-primary-foreground/50'}`}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
+                  ${index + 1 < currentStep ? 'bg-primary-foreground text-primary' : 
+                    index + 1 === currentStep ? 'bg-primary-foreground/30 border-2 border-primary-foreground' : 
+                    'bg-primary-foreground/10 border border-primary-foreground/30'}`}
+                >
+                  {index + 1 < currentStep ? <Check className="w-4 h-4" /> : index + 1}
+                </div>
+                <span className="text-xs mt-1 hidden sm:block">{title}</span>
+              </div>
+            ))}
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Information Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
-              <User className="w-5 h-5 text-primary" />
-              Informasi Pribadi
-            </h3>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="contoh@email.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="namaLengkap" className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  Nama Lengkap <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="namaLengkap"
-                  type="text"
-                  placeholder="Masukkan nama lengkap"
-                  value={formData.namaLengkap}
-                  onChange={(e) => handleInputChange("namaLengkap", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="jenisKelamin">
-                  Jenis Kelamin <span className="text-destructive">*</span>
-                </Label>
-                <Select value={formData.jenisKelamin} onValueChange={(value) => handleInputChange("jenisKelamin", value)}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Pilih jenis kelamin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="laki-laki">Laki-laki</SelectItem>
-                    <SelectItem value="perempuan">Perempuan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="noWhatsapp" className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  No. WhatsApp <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="noWhatsapp"
-                  type="tel"
-                  placeholder="08xxxxxxxxxx"
-                  value={formData.noWhatsapp}
-                  onChange={(e) => handleInputChange("noWhatsapp", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="alamat" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                Alamat <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="alamat"
-                placeholder="Masukkan alamat lengkap"
-                value={formData.alamat}
-                onChange={(e) => handleInputChange("alamat", e.target.value)}
-                className="min-h-[100px] transition-all focus:shadow-soft resize-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="opd" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                OPD (Organisasi Perangkat Daerah) <span className="text-destructive">*</span>
-              </Label>
-              <Select value={formData.opdId} onValueChange={(value) => handleInputChange("opdId", value)}>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Pilih OPD" />
-                </SelectTrigger>
-                <SelectContent>
-                  {opdList.map((opd) => (
-                    <SelectItem key={opd.id} value={opd.id}>
-                      {opd.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Tree Information Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
-              <TreePine className="w-5 h-5 text-primary" />
-              Informasi Pohon
-            </h3>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="jumlahPohon">
-                  Jumlah Pohon <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="jumlahPohon"
-                  type="number"
-                  min="1"
-                  placeholder="Masukkan jumlah pohon"
-                  value={formData.jumlahPohon}
-                  onChange={(e) => handleInputChange("jumlahPohon", e.target.value)}
-                  className="h-12 transition-all focus:shadow-soft"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="kategoriPohon">
-                  Kategori Pohon <span className="text-destructive">*</span>
-                </Label>
-                <Select 
-                  value={formData.kategoriPohon} 
-                  onValueChange={(value) => {
-                    handleInputChange("kategoriPohon", value);
-                    handleInputChange("jenisPohon", "");
-                  }}
-                >
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Pilih kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="buah">Pohon Buah</SelectItem>
-                    <SelectItem value="kayu">Pohon Kayu</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="jenisPohon">
-                  Jenis Pohon <span className="text-destructive">*</span>
-                </Label>
-                <Select 
-                  value={formData.jenisPohon} 
-                  onValueChange={(value) => handleInputChange("jenisPohon", value)}
-                  disabled={!formData.kategoriPohon}
-                >
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder={formData.kategoriPohon ? "Pilih jenis pohon" : "Pilih kategori terlebih dahulu"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(formData.kategoriPohon === "buah" ? jenisPohonBuah : jenisPohonKayu).map((jenis) => (
-                      <SelectItem key={jenis} value={jenis.toLowerCase()}>
-                        {jenis}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Location Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
-              <MapPin className="w-5 h-5 text-primary" />
-              Lokasi Penanaman
-            </h3>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="latitude" className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  Latitude
-                </Label>
-                <Input
-                  id="latitude"
-                  type="text"
-                  placeholder="-6.xxxxx"
-                  value={formData.latitude}
-                  onChange={(e) => handleInputChange("latitude", e.target.value)}
-                  onClick={formData.latitude && formData.longitude ? openInGoogleMaps : undefined}
-                  className={`h-12 transition-all focus:shadow-soft ${formData.latitude && formData.longitude ? 'cursor-pointer hover:bg-primary/5' : ''}`}
-                  title={formData.latitude && formData.longitude ? "Klik untuk lihat di Google Maps" : undefined}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude" className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  Longitude
-                </Label>
-                <Input
-                  id="longitude"
-                  type="text"
-                  placeholder="106.xxxxx"
-                  value={formData.longitude}
-                  onChange={(e) => handleInputChange("longitude", e.target.value)}
-                  onClick={formData.latitude && formData.longitude ? openInGoogleMaps : undefined}
-                  className={`h-12 transition-all focus:shadow-soft ${formData.latitude && formData.longitude ? 'cursor-pointer hover:bg-primary/5' : ''}`}
-                  title={formData.latitude && formData.longitude ? "Klik untuk lihat di Google Maps" : undefined}
-                />
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={getCurrentLocation}
-                disabled={isGettingLocation}
-                className="flex items-center gap-2"
-              >
-                {isGettingLocation ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Locate className="w-4 h-4" />
-                )}
-                {isGettingLocation ? "Mengambil Lokasi..." : "Gunakan Lokasi Saya"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={openInGoogleMaps}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Lihat di Google Maps
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Klik "Gunakan Lokasi Saya" untuk mengambil koordinat GPS otomatis, atau masukkan koordinat secara manual (opsional)
-            </p>
-          </div>
-
-          {/* Photo Upload Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
-              <Camera className="w-5 h-5 text-primary" />
-              Dokumentasi Foto
-            </h3>
-
-            <div className="space-y-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-                id="photo-upload"
-              />
-
-              {photoPreview ? (
-                <div className="relative rounded-xl overflow-hidden shadow-card">
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="w-full h-64 object-cover"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Step 1: Email, Nama Lengkap, NIP */}
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
+                <User className="w-5 h-5 text-primary" />
+                Data Diri
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    Email <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="contoh@email.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="h-12 transition-all focus:shadow-soft"
                   />
-                  <button
-                    type="button"
-                    onClick={removePhoto}
-                    className="absolute top-3 right-3 p-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
                 </div>
-              ) : (
-                <label
-                  htmlFor="photo-upload"
-                  className="flex flex-col items-center justify-center h-48 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 cursor-pointer hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
-                >
-                  <Upload className="w-12 h-12 text-primary mb-3" />
-                  <span className="text-foreground font-medium">Klik untuk upload foto</span>
-                  <span className="text-sm text-muted-foreground mt-1">JPG, PNG maksimal 5MB</span>
-                </label>
-              )}
-            </div>
-          </div>
 
-          {/* Submit Button */}
-          <div className="pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="namaLengkap" className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    Nama Lengkap <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="namaLengkap"
+                    type="text"
+                    placeholder="Masukkan nama lengkap"
+                    value={formData.namaLengkap}
+                    onChange={(e) => handleInputChange("namaLengkap", e.target.value)}
+                    className="h-12 transition-all focus:shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nip" className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    NIP <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="nip"
+                    type="text"
+                    placeholder="Masukkan NIP"
+                    value={formData.nip}
+                    onChange={(e) => handleInputChange("nip", e.target.value)}
+                    className="h-12 transition-all focus:shadow-soft"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Jenis Kelamin, No WhatsApp, Alamat */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
+                <Phone className="w-5 h-5 text-primary" />
+                Kontak & Alamat
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="jenisKelamin">
+                    Jenis Kelamin <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={formData.jenisKelamin} onValueChange={(value) => handleInputChange("jenisKelamin", value)}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Pilih jenis kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="laki-laki">Laki-laki</SelectItem>
+                      <SelectItem value="perempuan">Perempuan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="noWhatsapp" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    No. WhatsApp <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="noWhatsapp"
+                    type="tel"
+                    placeholder="08xxxxxxxxxx"
+                    value={formData.noWhatsapp}
+                    onChange={(e) => handleInputChange("noWhatsapp", e.target.value)}
+                    className="h-12 transition-all focus:shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="alamat" className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    Alamat <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="alamat"
+                    placeholder="Masukkan alamat lengkap"
+                    value={formData.alamat}
+                    onChange={(e) => handleInputChange("alamat", e.target.value)}
+                    className="min-h-[100px] transition-all focus:shadow-soft resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: OPD, Jumlah Pohon, Jenis Pohon */}
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
+                <Building2 className="w-5 h-5 text-primary" />
+                Data OPD & Pohon
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="opd" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    OPD (Organisasi Perangkat Daerah) <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={formData.opdId} onValueChange={(value) => handleInputChange("opdId", value)}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Pilih OPD" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opdList.map((opd) => (
+                        <SelectItem key={opd.id} value={opd.id}>
+                          {opd.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jumlahPohon">
+                    Jumlah Pohon <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="jumlahPohon"
+                    type="number"
+                    min="1"
+                    placeholder="Masukkan jumlah pohon"
+                    value={formData.jumlahPohon}
+                    onChange={(e) => handleInputChange("jumlahPohon", e.target.value)}
+                    className="h-12 transition-all focus:shadow-soft"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kategoriPohon">
+                    Kategori Pohon <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={formData.kategoriPohon} 
+                    onValueChange={(value) => {
+                      handleInputChange("kategoriPohon", value);
+                      handleInputChange("jenisPohon", "");
+                    }}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Pilih kategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="buah">Pohon Buah</SelectItem>
+                      <SelectItem value="kayu">Pohon Kayu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jenisPohon">
+                    Jenis Pohon <span className="text-destructive">*</span>
+                  </Label>
+                  <Select 
+                    value={formData.jenisPohon} 
+                    onValueChange={(value) => handleInputChange("jenisPohon", value)}
+                    disabled={!formData.kategoriPohon}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder={formData.kategoriPohon ? "Pilih jenis pohon" : "Pilih kategori terlebih dahulu"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(formData.kategoriPohon === "buah" ? jenisPohonBuah : jenisPohonKayu).map((jenis) => (
+                        <SelectItem key={jenis} value={jenis.toLowerCase()}>
+                          {jenis}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Sumber Bibit, Lokasi Tanam, Submit */}
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 pb-2 border-b border-border">
+                <Sprout className="w-5 h-5 text-primary" />
+                Sumber Bibit & Lokasi
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="sumberBibit" className="flex items-center gap-2">
+                    <Sprout className="w-4 h-4 text-muted-foreground" />
+                    Sumber Bibit <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={formData.sumberBibit} onValueChange={(value) => handleInputChange("sumberBibit", value)}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Pilih sumber bibit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sumberBibitOptions.map((source) => (
+                        <SelectItem key={source} value={source.toLowerCase()}>
+                          {source}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    Lokasi Penanaman (Opsional)
+                  </Label>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="latitude" className="text-sm text-muted-foreground">
+                        Latitude
+                      </Label>
+                      <Input
+                        id="latitude"
+                        type="text"
+                        placeholder="-6.xxxxx"
+                        value={formData.latitude}
+                        onChange={(e) => handleInputChange("latitude", e.target.value)}
+                        className="h-12 transition-all focus:shadow-soft"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="longitude" className="text-sm text-muted-foreground">
+                        Longitude
+                      </Label>
+                      <Input
+                        id="longitude"
+                        type="text"
+                        placeholder="106.xxxxx"
+                        value={formData.longitude}
+                        onChange={(e) => handleInputChange("longitude", e.target.value)}
+                        className="h-12 transition-all focus:shadow-soft"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={getCurrentLocation}
+                    disabled={isGettingLocation}
+                    className="flex items-center gap-2"
+                  >
+                    {isGettingLocation ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Locate className="w-4 h-4" />
+                    )}
+                    {isGettingLocation ? "Mengambil Lokasi..." : "Gunakan Lokasi Saya"}
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Klik tombol di atas untuk mengambil koordinat GPS otomatis
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between pt-6 border-t border-border">
             <Button
-              type="submit"
-              variant="hero"
-              size="xl"
-              className="w-full"
-              disabled={isSubmitting}
+              type="button"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentStep === 1}
+              className="flex items-center gap-2"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  Submit Data Pohon
-                </>
-              )}
+              <ChevronLeft className="w-4 h-4" />
+              Sebelumnya
             </Button>
+            
+            {currentStep < TOTAL_STEPS ? (
+              <Button
+                type="button"
+                onClick={handleNext}
+                className="flex items-center gap-2"
+              >
+                Selanjutnya
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="hero"
+                size="lg"
+                disabled={isSubmitting}
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Submit Data Pohon
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>
