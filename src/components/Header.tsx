@@ -1,42 +1,62 @@
 import { Link } from "react-router-dom";
-import { TreePine, LogIn } from "lucide-react";
+import { TreePine, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 
 const Header = () => {
   return (
-    <header className="w-full bg-transparent py-4 z-30">
-      <div className="container flex items-center justify-between">
+    <header className="w-full bg-white border-b sticky top-0 z-50">
+      <div className="container flex items-center justify-between py-3">
+
+        {/* Logo kiri */}
         <Link to="/" className="flex items-center gap-3">
-          <div className="p-2 bg-primary-foreground/10 rounded-xl">
-            <TreePine className="w-6 h-6 text-primary-foreground" />
+          <div className="w-10 h-10 flex items-center justify-center bg-emerald-600 rounded-full">
+            <TreePine className="w-5 h-5 text-white" />
           </div>
-          <span className="font-semibold text-primary-foreground">Bank Data Pohon</span>
+          <div className="leading-tight">
+            <p className="font-semibold text-sm">Program Agro Mopomulo</p>
+            <p className="text-xs text-muted-foreground">Kabupaten Gorontalo Utara</p>
+          </div>
         </Link>
 
-        <nav className="flex items-center gap-6">
-          <NavLink
-            to="/"
-            className="text-sm text-primary-foreground/80 hover:text-primary-foreground"
-            activeClassName="text-primary-foreground font-semibold"
-          >
-            Beranda
-          </NavLink>
-          <NavLink
-            to="/about"
-            className="text-sm text-primary-foreground/80 hover:text-primary-foreground"
-            activeClassName="text-primary-foreground font-semibold"
-          >
-            Tentang
-          </NavLink>
+        {/* Menu tengah */}
+        <nav className="hidden md:flex items-center gap-6">
+          {[
+            { label: "Beranda", to: "/" },
+            { label: "Tentang", to: "/about" },
+            { label: "Kontribusi OPD", to: "/opd" },
+            { label: "Peta Penanaman", to: "/map" },
+            { label: "Galeri", to: "/gallery" },
+            { label: "Edukasi", to: "/education" },
+          ].map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className="px-3 py-2 rounded-md text-sm text-gray-600 hover:text-black"
+              activeClassName="bg-emerald-100 text-emerald-700 font-medium"
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
 
+        {/* Tombol kanan */}
+        <div className="flex items-center gap-3">
           <Link to="/auth">
-            <Button variant="outline" size="sm" className="ml-2">
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
+            <Button className="rounded-full bg-emerald-600 hover:bg-emerald-700">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Partisipasi
             </Button>
           </Link>
-        </nav>
+
+          <Link to="/admin">
+            <Button variant="outline" className="rounded-full">
+              <LogIn className="w-4 h-4 mr-2" />
+              Admin
+            </Button>
+          </Link>
+        </div>
+
       </div>
     </header>
   );
