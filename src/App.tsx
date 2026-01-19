@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 
-import Header from "@/components/Header";
+import PublicLayout from "@/components/layouts/PublicLayout";
 
 // Pages utama
 import Index from "./pages/Index";
@@ -32,20 +32,21 @@ const App = () => (
           <Sonner />
 
           <BrowserRouter>
-            {/* Header selalu tampil */}
-            <Header />
-
-            {/* Halaman yang berubah */}
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/opd" element={<Opd />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/education" element={<Education />} />
-              <Route path="/auth" element={<Auth />} />
+              {/* Public pages dengan PublicLayout */}
+              <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+              <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+              <Route path="/opd" element={<PublicLayout><Opd /></PublicLayout>} />
+              <Route path="/map" element={<PublicLayout><MapPage /></PublicLayout>} />
+              <Route path="/gallery" element={<PublicLayout><Gallery /></PublicLayout>} />
+              <Route path="/education" element={<PublicLayout><Education /></PublicLayout>} />
+              <Route path="/auth" element={<PublicLayout><Auth /></PublicLayout>} />
+              
+              {/* Admin page dengan layout sendiri */}
               <Route path="/admin" element={<Admin />} />
-              <Route path="*" element={<NotFound />} />
+              
+              {/* 404 */}
+              <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
             </Routes>
           </BrowserRouter>
 
