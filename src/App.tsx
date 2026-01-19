@@ -16,7 +16,7 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 // Pages tambahan sesuai menu header
-import Opd from "./pages/Opd";
+import Opd from "./pages/KontribusiOpd";
 import MapPage from "./pages/MapPage";
 import Gallery from "./pages/Gallery";
 import Education from "./pages/Education";

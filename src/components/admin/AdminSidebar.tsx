@@ -1,4 +1,13 @@
-import { BarChart3, TreePine, Sliders, Settings, Image } from "lucide-react";
+import React from "react";
+import {
+  BarChart3,
+  TreePine,
+  Sliders,
+  Settings,
+  Image,
+  Users,
+} from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +17,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -16,21 +28,70 @@ interface AdminSidebarProps {
   isAdmin: boolean;
 }
 
-const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) => {
-  const menuItems = [
-    { id: "dashboard", title: "Dashboard", icon: BarChart3 },
-    { id: "registrations", title: "Data Pohon", icon: TreePine },
+type MenuItem = {
+  id: string;
+  title: string;
+  icon: React.ElementType;
+};
+
+export default function AdminSidebar({
+  activeTab,
+  onTabChange,
+  isAdmin,
+}: AdminSidebarProps) {
+  const { setOpen } = useSidebar();      // kontrol sidebar
+  const isMobile = useIsMobile();        // deteksi mobile
+
+  // handler klik menu (INI KUNCI)
+  const handleMenuClick = (tab: string) => {
+    onTabChange(tab);
+
+    // auto close sidebar hanya di mobile
+    if (isMobile) {
+      setOpen(false);
+    }
+  };
+
+  const menuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      title: "Dashboard",
+      icon: BarChart3,
+    },
+    {
+      id: "registrations",
+      title: "Data Pohon",
+      icon: TreePine,
+    },
   ];
 
-  const adminMenuItems = [
-    { id: "hero-settings", title: "Pengaturan Hero", icon: Image },
-    { id: "global-settings", title: "Pengaturan Tampilan", icon: Sliders },
-    { id: "settings", title: "Pengaturan OPD", icon: Settings },
+  const adminMenuItems: MenuItem[] = [
+    {
+      id: "hero-settings",
+      title: "Pengaturan Hero",
+      icon: Image,
+    },
+    {
+      id: "global-settings",
+      title: "Pengaturan Tampilan",
+      icon: Sliders,
+    },
+    {
+      id: "opd-contribution",
+      title: "Kontribusi OPD",
+      icon: Users,
+    },
+    {
+      id: "settings",
+      title: "Pengaturan OPD",
+      icon: Settings,
+    },
   ];
 
   return (
     <Sidebar>
       <SidebarContent className="pt-4">
+        {/* MENU UTAMA */}
         <SidebarGroup>
           <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -38,9 +99,8 @@ const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) =>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => handleMenuClick(item.id)}
                     isActive={activeTab === item.id}
-                    className="cursor-pointer"
                   >
                     <item.icon className="w-4 h-4" />
                     <span>{item.title}</span>
@@ -51,6 +111,7 @@ const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) =>
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* MENU ADMIN */}
         {isAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>Pengaturan Admin</SidebarGroupLabel>
@@ -59,9 +120,8 @@ const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) =>
                 {adminMenuItems.map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
-                      onClick={() => onTabChange(item.id)}
+                      onClick={() => handleMenuClick(item.id)}
                       isActive={activeTab === item.id}
-                      className="cursor-pointer"
                     >
                       <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
@@ -75,6 +135,4 @@ const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) =>
       </SidebarContent>
     </Sidebar>
   );
-};
-
-export default AdminSidebar;
+}

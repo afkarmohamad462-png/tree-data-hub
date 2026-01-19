@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+
 import { useAuth } from "@/hooks/useAuth";
 import AdminLayout from "@/components/layouts/AdminLayout";
-import OPDSettings from "@/components/admin/OPDSettings";
-import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
+
 import DashboardStats from "@/components/admin/DashboardStats";
-import GlobalSettings from "@/components/admin/GlobalSettings";
+import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
 import HeroSettings from "@/components/admin/HeroSettings";
+import GlobalSettings from "@/components/admin/GlobalSettings";
+import OPDSettings from "@/components/admin/OPDSettings";
+import KontribusiOpd from "@/pages/KontribusiOpd"; // ✅ PENTING
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -28,14 +31,22 @@ const Admin = () => {
     switch (activeTab) {
       case "dashboard":
         return <DashboardStats />;
+
       case "registrations":
         return <TreeRegistrationsList />;
+
       case "hero-settings":
         return isAdmin ? <HeroSettings /> : null;
+
       case "global-settings":
         return isAdmin ? <GlobalSettings /> : null;
+
+      case "opd-contribution": // ✅ CASE YANG SEBELUMNYA HILANG
+        return isAdmin ? <KontribusiOpd /> : null;
+
       case "settings":
         return isAdmin ? <OPDSettings /> : null;
+
       default:
         return <DashboardStats />;
     }
@@ -45,12 +56,19 @@ const Admin = () => {
     <>
       <Helmet>
         <title>Dashboard Admin - Bank Data Pohon</title>
-        <meta name="description" content="Dashboard admin untuk mengelola data pohon" />
+        <meta
+          name="description"
+          content="Dashboard admin untuk mengelola data pohon"
+        />
       </Helmet>
 
-      <AdminLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      <AdminLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
         {renderContent()}
       </AdminLayout>
+
     </>
   );
 };
