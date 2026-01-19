@@ -1,4 +1,4 @@
-import { BarChart3, TreePine, Sliders, Settings } from "lucide-react";
+import { BarChart3, TreePine, Sliders, Settings, Image } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ const AdminSidebar = ({ activeTab, onTabChange, isAdmin }: AdminSidebarProps) =>
   ];
 
   const adminMenuItems = [
+    { id: "hero-settings", title: "Pengaturan Hero", icon: Image },
     { id: "global-settings", title: "Pengaturan Tampilan", icon: Sliders },
     { id: "settings", title: "Pengaturan OPD", icon: Settings },
   ];

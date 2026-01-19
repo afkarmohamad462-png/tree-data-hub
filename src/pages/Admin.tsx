@@ -7,6 +7,7 @@ import OPDSettings from "@/components/admin/OPDSettings";
 import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
 import DashboardStats from "@/components/admin/DashboardStats";
 import GlobalSettings from "@/components/admin/GlobalSettings";
+import HeroSettings from "@/components/admin/HeroSettings";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ const Admin = () => {
         return <DashboardStats />;
       case "registrations":
         return <TreeRegistrationsList />;
+      case "hero-settings":
+        return isAdmin ? <HeroSettings /> : null;
       case "global-settings":
         return isAdmin ? <GlobalSettings /> : null;
       case "settings":
