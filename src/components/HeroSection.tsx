@@ -1,5 +1,7 @@
 import { TreePine, Leaf, TreeDeciduous, LogIn, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import heroForest from "@/assets/hero-forest.jpg";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,13 +11,68 @@ import {
 } from "@/components/ui/dialog";
 import TreeForm from "@/components/TreeForm";
 
+interface HeroSettings {
+  badge_text: string;
+  title_line1: string;
+  title_line2: string;
+  description: string;
+  button_text: string;
+  stat1_value: string;
+  stat1_label: string;
+  stat2_value: string;
+  stat2_label: string;
+  stat3_value: string;
+  stat3_label: string;
+  image_url: string;
+  image_type: "default" | "url" | "upload";
+}
+
+const defaultSettings: HeroSettings = {
+  badge_text: "Sistem Pendataan Pohon",
+  title_line1: "Bank Data",
+  title_line2: "Pohon",
+  description: "Sistem pendataan pohon untuk mendukung program Agro Mopomulo untuk pelestarian lingkungan. Mari bersama menjaga bumi untuk generasi mendatang.",
+  button_text: "Form Pendataan Pohon",
+  stat1_value: "10K+",
+  stat1_label: "Pohon Tercatat",
+  stat2_value: "50+",
+  stat2_label: "Jenis Pohon",
+  stat3_value: "25",
+  stat3_label: "OPD Terlibat",
+  image_url: "",
+  image_type: "default",
+};
+
 const HeroSection = () => {
+  const { data: settings } = useQuery({
+    queryKey: ["hero-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("*")
+        .eq("key", "hero")
+        .single();
+
+      if (error) return defaultSettings;
+      return data?.value as unknown as HeroSettings;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  const heroSettings = settings || defaultSettings;
+
+  // Determine background image
+  const backgroundImage = 
+    heroSettings.image_type !== "default" && heroSettings.image_url
+      ? heroSettings.image_url
+      : heroForest;
+
   return (
     <section className="relative min-h-[50vh] overflow-hidden flex items-center">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src={heroForest}
+          src={backgroundImage}
           alt="Forest background"
           className="w-full h-full object-cover"
         />
@@ -56,17 +113,16 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto text-center animate-fade-up">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 text-primary-foreground text-sm font-medium mb-6">
             <TreePine className="w-4 h-4" />
-            Sistem Pendataan Pohon
+            {heroSettings.badge_text}
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary-foreground mb-6 leading-tight">
-            Bank Data
-            <span className="block text-primary-foreground/90">Pohon</span>
+            {heroSettings.title_line1}
+            <span className="block text-primary-foreground/90">{heroSettings.title_line2}</span>
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed mb-8">
-            Sistem pendataan pohon untuk mendukung program Agro Mopomulo untuk
-            pelestarian lingkungan. Mari bersama menjaga bumi untuk generasi mendatang.
+            {heroSettings.description}
           </p>
 
           {/* CTA Button */}
@@ -78,7 +134,7 @@ const HeroSection = () => {
                 className="text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               >
                 <ClipboardList className="w-5 h-5 mr-2" />
-                Form Pendataan Pohon
+                {heroSettings.button_text}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
@@ -89,16 +145,16 @@ const HeroSection = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-12 max-w-2xl mx-auto">
             <div className="p-4 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">10K+</div>
-              <div className="text-sm text-primary-foreground/70 mt-1">Pohon Tercatat</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">{heroSettings.stat1_value}</div>
+              <div className="text-sm text-primary-foreground/70 mt-1">{heroSettings.stat1_label}</div>
             </div>
             <div className="p-4 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">50+</div>
-              <div className="text-sm text-primary-foreground/70 mt-1">Jenis Pohon</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">{heroSettings.stat2_value}</div>
+              <div className="text-sm text-primary-foreground/70 mt-1">{heroSettings.stat2_label}</div>
             </div>
             <div className="p-4 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">25</div>
-              <div className="text-sm text-primary-foreground/70 mt-1">OPD Terlibat</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">{heroSettings.stat3_value}</div>
+              <div className="text-sm text-primary-foreground/70 mt-1">{heroSettings.stat3_label}</div>
             </div>
           </div>
         </div>
