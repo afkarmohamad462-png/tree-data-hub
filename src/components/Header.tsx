@@ -1,23 +1,29 @@
 import { Link } from "react-router-dom";
-import { TreePine, LogIn, UserPlus } from "lucide-react";
+import { TreePine, LogIn, UserPlus, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const Header = () => {
   return (
     <header className="w-full bg-white border-b sticky top-0 z-50">
       <div className="container flex items-center justify-between py-3">
 
-        {/* Logo kiri */}
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center bg-emerald-600 rounded-full">
-            <TreePine className="w-5 h-5 text-white" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-semibold text-sm">Program Agro Mopomulo</p>
-            <p className="text-xs text-muted-foreground">Kabupaten Gorontalo Utara</p>
-          </div>
-        </Link>
+        {/* Mobile sidebar trigger + Logo */}
+        <div className="flex items-center gap-3">
+          <SidebarTrigger className="md:hidden">
+            <Menu className="w-5 h-5" />
+          </SidebarTrigger>
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-emerald-600 rounded-full">
+              <TreePine className="w-5 h-5 text-white" />
+            </div>
+            <div className="leading-tight">
+              <p className="font-semibold text-sm">Program Agro Mopomulo</p>
+              <p className="text-xs text-muted-foreground">Kabupaten Gorontalo Utara</p>
+            </div>
+          </Link>
+        </div>
 
         {/* Menu tengah */}
         <nav className="hidden md:flex items-center gap-6">
@@ -45,14 +51,14 @@ const Header = () => {
           <Link to="/auth">
             <Button className="rounded-full bg-emerald-600 hover:bg-emerald-700">
               <UserPlus className="w-4 h-4 mr-2" />
-              Partisipasi
+              <span className="hidden sm:inline">Partisipasi</span>
             </Button>
           </Link>
 
           <Link to="/admin">
             <Button variant="outline" className="rounded-full">
               <LogIn className="w-4 h-4 mr-2" />
-              Admin
+              <span className="hidden sm:inline">Admin</span>
             </Button>
           </Link>
         </div>
