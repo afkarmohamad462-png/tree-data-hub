@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const menuItems = [
@@ -21,6 +22,12 @@ const menuItems = [
 ];
 
 const PublicSidebar = () => {
+  const { setOpen } = useSidebar();
+
+  const handleMenuClick = () => {
+    setOpen(false);
+  };
+
   return (
     <Sidebar>
       <SidebarContent className="pt-4">
@@ -30,7 +37,7 @@ const PublicSidebar = () => {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild onClick={handleMenuClick}>
                     <NavLink
                       to={item.to}
                       className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50"
