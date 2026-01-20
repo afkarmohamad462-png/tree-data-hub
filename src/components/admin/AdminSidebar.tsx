@@ -6,6 +6,7 @@ import {
   Settings,
   Image,
   Users,
+  Shield,
 } from "lucide-react";
 
 import {
@@ -64,6 +65,11 @@ export default function AdminSidebar({
       id: "hero-settings",
       title: "Pengaturan Hero",
       icon: Image,
+    },
+    {
+      id: "logo-settings",
+      title: "Pengaturan Logo",
+      icon: Shield,
     },
     {
       id: "global-settings",
