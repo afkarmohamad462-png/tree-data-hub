@@ -8,9 +8,10 @@ import AdminLayout from "@/components/layouts/AdminLayout";
 import DashboardStats from "@/components/admin/DashboardStats";
 import TreeRegistrationsList from "@/components/admin/TreeRegistrationsList";
 import HeroSettings from "@/components/admin/HeroSettings";
+import LogoSettings from "@/components/admin/LogoSettings";
 import GlobalSettings from "@/components/admin/GlobalSettings";
 import OPDSettings from "@/components/admin/OPDSettings";
-import KontribusiOpd from "@/pages/KontribusiOpd"; // ✅ PENTING
+import KontribusiOpd from "@/pages/KontribusiOpd";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -38,10 +39,13 @@ const Admin = () => {
       case "hero-settings":
         return isAdmin ? <HeroSettings /> : null;
 
+      case "logo-settings":
+        return isAdmin ? <LogoSettings /> : null;
+
       case "global-settings":
         return isAdmin ? <GlobalSettings /> : null;
 
-      case "opd-contribution": // ✅ CASE YANG SEBELUMNYA HILANG
+      case "opd-contribution":
         return isAdmin ? <KontribusiOpd /> : null;
 
       case "settings":
