@@ -22,10 +22,11 @@ const menuItems = [
 ];
 
 const PublicSidebar = () => {
-  const { setOpen } = useSidebar();
+  const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
   const handleMenuClick = () => {
-    setOpen(false);
+    if (isMobile) setOpenMobile(false);
+    else setOpen(false);
   };
 
   return (
@@ -37,7 +38,7 @@ const PublicSidebar = () => {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild onClick={handleMenuClick}>
+                  <SidebarMenuButton asChild onClickCapture={handleMenuClick}>
                     <NavLink
                       to={item.to}
                       className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50"

@@ -20,8 +20,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { useIsMobile } from "@/hooks/use-mobile";
-
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -39,13 +37,13 @@ export default function AdminSidebar({
   onTabChange,
   isAdmin,
 }: AdminSidebarProps) {
-  const { setOpen } = useSidebar();      // kontrol sidebar
-  const isMobile = useIsMobile();        // deteksi mobile
+  const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
   // handler klik menu - auto close di semua device
   const handleMenuClick = (tab: string) => {
     onTabChange(tab);
-    setOpen(false);
+    if (isMobile) setOpenMobile(false);
+    else setOpen(false);
   };
 
   const menuItems: MenuItem[] = [
