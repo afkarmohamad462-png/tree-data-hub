@@ -42,14 +42,10 @@ export default function AdminSidebar({
   const { setOpen } = useSidebar();      // kontrol sidebar
   const isMobile = useIsMobile();        // deteksi mobile
 
-  // handler klik menu (INI KUNCI)
+  // handler klik menu - auto close di semua device
   const handleMenuClick = (tab: string) => {
     onTabChange(tab);
-
-    // auto close sidebar hanya di mobile
-    if (isMobile) {
-      setOpen(false);
-    }
+    setOpen(false);
   };
 
   const menuItems: MenuItem[] = [
