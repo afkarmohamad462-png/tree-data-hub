@@ -20,6 +20,11 @@ interface HeroSettings {
   stat3_label: string;
   image_url: string;
   image_type: "default" | "url" | "upload";
+  // Gambar kedua
+  secondary_image_url: string;
+  secondary_image_type: "none" | "url" | "upload";
+  secondary_image_title: string;
+  secondary_image_description: string;
 }
 
 const defaultSettings: HeroSettings = {
@@ -37,6 +42,10 @@ const defaultSettings: HeroSettings = {
   stat3_label: "OPD Terlibat",
   image_url: "",
   image_type: "default",
+  secondary_image_url: "",
+  secondary_image_type: "none",
+  secondary_image_title: "Dokumentasi Program Agro Mopomulo",
+  secondary_image_description: "",
 };
 
 const HeroSection = () => {
@@ -50,7 +59,7 @@ const HeroSection = () => {
         .single();
 
       if (error) return defaultSettings;
-      return data?.value as unknown as HeroSettings;
+      return { ...defaultSettings, ...(data?.value as unknown as Partial<HeroSettings>) };
     },
   });
 
@@ -141,15 +150,15 @@ const HeroSection = () => {
         </div>
       </section>
 
-      {/* ================= IMAGE CARD (TIDAK TERPOTONG) ================= */}
-      {heroSettings.image_url && (
+      {/* ================= IMAGE CARD (GAMBAR KEDUA) ================= */}
+      {heroSettings.secondary_image_type !== "none" && heroSettings.secondary_image_url && (
         <section className="py-20 bg-background">
           <div className="container">
             <div className="max-w-6xl mx-auto">
               <div className="bg-white rounded-3xl shadow-2xl border p-6">
                 <div className="flex justify-center items-center bg-muted rounded-2xl p-4">
                   <img
-                    src={heroSettings.image_url}
+                    src={heroSettings.secondary_image_url}
                     alt="Visual Program"
                     className="max-h-[70vh] max-w-full w-auto object-contain"
                   />
@@ -157,11 +166,13 @@ const HeroSection = () => {
 
                 <div className="mt-6">
                   <h3 className="text-2xl font-semibold">
-                    Dokumentasi Program Agro Mopomulo
+                    {heroSettings.secondary_image_title}
                   </h3>
-                  <p className="text-muted-foreground mt-2 max-w-2xl">
-                    
-                  </p>
+                  {heroSettings.secondary_image_description && (
+                    <p className="text-muted-foreground mt-2 max-w-2xl">
+                      {heroSettings.secondary_image_description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
