@@ -4,9 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TreePine, Filter, MapPin, Users, Building2, Map } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TreePine, Filter, MapPin, Users, Building2, Map, FileSpreadsheet, FileText, Download } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast } from "@/hooks/use-toast";
 
 interface Registration {
   id: string;
@@ -123,6 +128,87 @@ const TreeRegistrationsList = () => {
     setIsLoading(false);
   };
 
+  // Export ke Excel
+  const exportToExcel = () => {
+    if (registrations.length === 0) {
+      toast({ title: "Tidak ada data", description: "Data kosong untuk di-export", variant: "destructive" });
+      return;
+    }
+
+    const exportData = registrations.map((reg, index) => ({
+      "No": index + 1,
+      "Tanggal": format(new Date(reg.created_at), "dd MMM yyyy", { locale: id }),
+      "Nama Lengkap": reg.full_name,
+      "Email": reg.email,
+      "Gender": reg.gender,
+      "WhatsApp": reg.whatsapp,
+      "Alamat": reg.address,
+      "OPD": reg.opd?.name || "-",
+      "Jenis Pohon": reg.tree_type,
+      "Kategori": reg.tree_category,
+      "Jumlah Pohon": reg.tree_count,
+      "Latitude": reg.latitude || "-",
+      "Longitude": reg.longitude || "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pohon");
+
+    // Auto-width columns
+    const colWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, 15),
+    }));
+    worksheet["!cols"] = colWidths;
+
+    const fileName = `data-pohon-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast({ title: "Export Berhasil", description: `File ${fileName} telah diunduh` });
+  };
+
+  // Export ke PDF
+  const exportToPDF = () => {
+    if (registrations.length === 0) {
+      toast({ title: "Tidak ada data", description: "Data kosong untuk di-export", variant: "destructive" });
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // Header
+    doc.setFontSize(16);
+    doc.text("Laporan Data Pendaftaran Pohon", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Tanggal Export: ${format(new Date(), "dd MMMM yyyy", { locale: id })}`, 14, 22);
+    doc.text(`Total Data: ${registrations.length} pendaftaran`, 14, 28);
+
+    const tableData = registrations.map((reg, index) => [
+      index + 1,
+      format(new Date(reg.created_at), "dd/MM/yy"),
+      reg.full_name,
+      reg.opd?.name || "-",
+      reg.tree_type,
+      reg.tree_category,
+      reg.tree_count,
+      reg.whatsapp,
+      reg.latitude && reg.longitude ? `${reg.latitude.toFixed(4)}, ${reg.longitude.toFixed(4)}` : "-",
+    ]);
+
+    autoTable(doc, {
+      head: [["No", "Tanggal", "Nama", "OPD", "Jenis Pohon", "Kategori", "Jumlah", "Kontak", "Koordinat"]],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [34, 139, 34] },
+    });
+
+    const fileName = `laporan-pohon-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+    doc.save(fileName);
+
+    toast({ title: "Export Berhasil", description: `File ${fileName} telah diunduh` });
+  };
+
   return (
     <div className="space-y-6">
       {/* ====== STAT CARD DASHBOARD ====== */}
@@ -176,7 +262,7 @@ const TreeRegistrationsList = () => {
             Data Pendaftaran Pohon
           </CardTitle>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <Select value={selectedOPD} onValueChange={setSelectedOPD}>
               <SelectTrigger className="w-[200px]">
@@ -191,6 +277,27 @@ const TreeRegistrationsList = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            <div className="flex gap-2 ml-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToExcel}
+                className="gap-1"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span className="hidden sm:inline">Excel</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToPDF}
+                className="gap-1"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
