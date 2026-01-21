@@ -24,6 +24,11 @@ interface HeroSettings {
   stat3_label: string;
   image_url: string;
   image_type: "default" | "url" | "upload";
+  // Gambar kedua (Image Card)
+  secondary_image_url: string;
+  secondary_image_type: "none" | "url" | "upload";
+  secondary_image_title: string;
+  secondary_image_description: string;
 }
 
 const defaultSettings: HeroSettings = {
@@ -40,6 +45,10 @@ const defaultSettings: HeroSettings = {
   stat3_label: "OPD Terlibat",
   image_url: "",
   image_type: "default",
+  secondary_image_url: "",
+  secondary_image_type: "none",
+  secondary_image_title: "Dokumentasi Program Agro Mopomulo",
+  secondary_image_description: "",
 };
 
 const HeroSettings = () => {
@@ -47,6 +56,8 @@ const HeroSettings = () => {
   const [settings, setSettings] = useState<HeroSettings>(defaultSettings);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploadingSecondary, setUploadingSecondary] = useState(false);
+  const [secondaryPreviewUrl, setSecondaryPreviewUrl] = useState<string>("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["hero-settings"],
@@ -64,9 +75,12 @@ const HeroSettings = () => {
 
   useEffect(() => {
     if (data) {
-      setSettings(data);
+      setSettings({ ...defaultSettings, ...data });
       if (data.image_url) {
         setPreviewUrl(data.image_url);
+      }
+      if (data.secondary_image_url) {
+        setSecondaryPreviewUrl(data.secondary_image_url);
       }
     }
   }, [data]);
@@ -142,6 +156,61 @@ const HeroSettings = () => {
     if (type === "default") {
       setPreviewUrl("");
       setSettings((prev) => ({ ...prev, image_url: "" }));
+    }
+  };
+
+  // Secondary image handlers
+  const handleSecondaryFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("File harus berupa gambar");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Ukuran file maksimal 5MB");
+      return;
+    }
+
+    setUploadingSecondary(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `secondary-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("hero-images")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("hero-images")
+        .getPublicUrl(fileName);
+
+      const newUrl = urlData.publicUrl;
+      setSecondaryPreviewUrl(newUrl);
+      setSettings((prev) => ({ ...prev, secondary_image_url: newUrl, secondary_image_type: "upload" }));
+      toast.success("Gambar berhasil diupload!");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error("Gagal mengupload gambar: " + errorMessage);
+    } finally {
+      setUploadingSecondary(false);
+    }
+  };
+
+  const handleSecondaryUrlChange = (url: string) => {
+    setSettings((prev) => ({ ...prev, secondary_image_url: url, secondary_image_type: "url" }));
+    setSecondaryPreviewUrl(url);
+  };
+
+  const handleSecondaryImageTypeChange = (type: "none" | "url" | "upload") => {
+    setSettings((prev) => ({ ...prev, secondary_image_type: type }));
+    if (type === "none") {
+      setSecondaryPreviewUrl("");
+      setSettings((prev) => ({ ...prev, secondary_image_url: "" }));
     }
   };
 
@@ -374,6 +443,110 @@ const HeroSettings = () => {
                     alt="Preview"
                     className="w-full h-full object-cover"
                     onError={() => setPreviewUrl("")}
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Secondary Image Settings */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Gambar Kedua (Image Card)</CardTitle>
+            <CardDescription>Gambar yang ditampilkan di bawah hero section</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="secondary_title">Judul Gambar</Label>
+                <Input
+                  id="secondary_title"
+                  value={settings.secondary_image_title}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, secondary_image_title: e.target.value }))}
+                  placeholder="Dokumentasi Program"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="secondary_desc">Deskripsi Gambar</Label>
+                <Input
+                  id="secondary_desc"
+                  value={settings.secondary_image_description}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, secondary_image_description: e.target.value }))}
+                  placeholder="Deskripsi gambar..."
+                />
+              </div>
+            </div>
+
+            <RadioGroup
+              value={settings.secondary_image_type}
+              onValueChange={(value) => handleSecondaryImageTypeChange(value as "none" | "url" | "upload")}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                <RadioGroupItem value="none" id="secondary_none" />
+                <Label htmlFor="secondary_none" className="flex items-center gap-2 cursor-pointer">
+                  <ImageIcon className="w-4 h-4" />
+                  Tidak Ditampilkan
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                <RadioGroupItem value="url" id="secondary_url" />
+                <Label htmlFor="secondary_url" className="flex items-center gap-2 cursor-pointer">
+                  <Link className="w-4 h-4" />
+                  Link URL
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                <RadioGroupItem value="upload" id="secondary_upload" />
+                <Label htmlFor="secondary_upload" className="flex items-center gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  Upload File
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {settings.secondary_image_type === "url" && (
+              <div className="space-y-2">
+                <Label htmlFor="secondary_image_url">URL Gambar</Label>
+                <Input
+                  id="secondary_image_url"
+                  type="url"
+                  value={settings.secondary_image_url}
+                  onChange={(e) => handleSecondaryUrlChange(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+            )}
+
+            {settings.secondary_image_type === "upload" && (
+              <div className="space-y-2">
+                <Label htmlFor="secondary_file_upload">Upload Gambar</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="secondary_file_upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSecondaryFileUpload}
+                    disabled={uploadingSecondary}
+                    className="max-w-sm"
+                  />
+                  {uploadingSecondary && <Loader2 className="w-5 h-5 animate-spin" />}
+                </div>
+                <p className="text-sm text-muted-foreground">Format: JPG, PNG, WebP. Maksimal 5MB.</p>
+              </div>
+            )}
+
+            {/* Preview */}
+            {(settings.secondary_image_type !== "none" && secondaryPreviewUrl) && (
+              <div className="space-y-2">
+                <Label>Preview Gambar Kedua</Label>
+                <div className="relative w-full max-w-md h-48 rounded-lg overflow-hidden border">
+                  <img
+                    src={secondaryPreviewUrl}
+                    alt="Secondary Preview"
+                    className="w-full h-full object-cover"
+                    onError={() => setSecondaryPreviewUrl("")}
                   />
                 </div>
               </div>
