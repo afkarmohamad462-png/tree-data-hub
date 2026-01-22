@@ -93,7 +93,9 @@ export default function AdminSidebar({
       <SidebarContent className="pt-4">
         {/* MENU UTAMA */}
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold text-muted-foreground mb-2">
+            Menu Utama
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -101,9 +103,10 @@ export default function AdminSidebar({
                   <SidebarMenuButton
                     onClick={() => handleMenuClick(item.id)}
                     isActive={activeTab === item.id}
+                    className="py-3 text-base"
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.title}</span>
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-base font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -114,7 +117,9 @@ export default function AdminSidebar({
         {/* MENU ADMIN */}
         {isAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel>Pengaturan Admin</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-sm font-semibold text-muted-foreground mb-2">
+              Pengaturan Admin
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminMenuItems.map((item) => (
@@ -122,9 +127,10 @@ export default function AdminSidebar({
                     <SidebarMenuButton
                       onClick={() => handleMenuClick(item.id)}
                       isActive={activeTab === item.id}
+                      className="py-3 text-base"
                     >
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-base font-medium">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
