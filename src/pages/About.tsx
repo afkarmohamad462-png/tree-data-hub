@@ -1,6 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import Footer from "@/components/Footer";
-import { Leaf, TreePine } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 const About = () => {
   return (
@@ -10,7 +9,7 @@ const About = () => {
         <meta name="description" content="Tentang Bank Data Pohon dan misi pelestarian lingkungan." />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-nature">
+      <div className="bg-gradient-nature">
         <main className="container py-24">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
@@ -37,8 +36,6 @@ const About = () => {
             </section>
           </div>
         </main>
-
-        <Footer />
       </div>
     </>
   );
