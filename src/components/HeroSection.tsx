@@ -152,28 +152,48 @@ const HeroSection = () => {
 
       {/* ================= IMAGE CARD (GAMBAR KEDUA) ================= */}
       {heroSettings.secondary_image_type !== "none" && heroSettings.secondary_image_url && (
-        <section className="py-20 bg-background">
-          <div className="container">
-            <div className="max-w-6xl mx-auto">
-              <div className="bg-white rounded-3xl shadow-2xl border p-6">
-                <div className="flex justify-center items-center bg-muted rounded-2xl p-4">
-                  <img
-                    src={heroSettings.secondary_image_url}
-                    alt="Visual Program"
-                    className="max-h-[70vh] max-w-full w-auto object-contain"
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-2xl font-semibold">
-                    {heroSettings.secondary_image_title}
-                  </h3>
+        <section className="py-12 md:py-20 lg:py-24 bg-gradient-nature">
+          <div className="container px-4 md:px-6">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              {(heroSettings.secondary_image_title || heroSettings.secondary_image_description) && (
+                <div className="text-center mb-8 md:mb-12">
+                  {heroSettings.secondary_image_title && (
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+                      {heroSettings.secondary_image_title}
+                    </h2>
+                  )}
                   {heroSettings.secondary_image_description && (
-                    <p className="text-muted-foreground mt-2 max-w-2xl">
+                    <p className="text-muted-foreground text-base md:text-lg max-w-3xl mx-auto">
                       {heroSettings.secondary_image_description}
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Image Container */}
+              <div className="relative group">
+                {/* Decorative background */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-2xl md:rounded-3xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+                
+                {/* Main card */}
+                <div className="relative bg-card rounded-xl md:rounded-2xl lg:rounded-3xl shadow-elevated border border-border/50 overflow-hidden">
+                  {/* Image wrapper with aspect ratio */}
+                  <div className="relative w-full">
+                    <img
+                      src={heroSettings.secondary_image_url}
+                      alt={heroSettings.secondary_image_title || "Visual Program"}
+                      className="w-full h-auto max-h-[50vh] sm:max-h-[60vh] md:max-h-[70vh] lg:max-h-[75vh] object-contain bg-muted/30"
+                    />
+                    
+                    {/* Subtle overlay gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/10 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Corner accents */}
+                <div className="absolute -top-2 -left-2 w-8 h-8 md:w-12 md:h-12 border-t-4 border-l-4 border-primary/30 rounded-tl-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 md:w-12 md:h-12 border-b-4 border-r-4 border-primary/30 rounded-br-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             </div>
           </div>
